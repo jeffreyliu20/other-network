@@ -121,7 +121,7 @@ export function deriveMetrics(modeId, sliders) {
     knowledgeSharing:       clamp(base.knowledge + persistence * 0.15 + openness * 0.1 - moderation * 0.05),
     noiseHarassmentRisk:    clamp(base.noise + immediacy * 0.15 - moderation * 0.2 + openness * 0.05),
     gatekeepingInequality:  clamp(base.gatekeeping - openness * 0.3 + commercialization * 0.2 + moderation * 0.1),
-    cooperativeConvergence: clamp(base.convergence + persistence * 0.15 + openness * 0.1 - base.noise * 0.05),
+    cooperativeConvergence: clamp(base.convergence + persistence * 0.15 + openness * 0.1 - immediacy * 0.2 - base.noise * 0.3),
     surveillanceRisk:       clamp(base.surveillance + persistence * 0.15 + moderation * 0.1 - openness * 0.05),
   };
 }

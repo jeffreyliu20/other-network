@@ -1,25 +1,32 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { getNodeLayout, getEdges, MODES } from '../simulation.js';
 
-const NODE_COUNT = 22;
-
 export default function NetworkGraph({ modeId, metrics, tick }) {
   const mode = MODES.find(m => m.id === modeId) || MODES[0];
-  const nodes = useMemo(() => getNodeLayout(mode.topology, NODE_COUNT), [modeId, tick]);
+  const nodeCount = mode.topology === 'chaotic' ? 40 : 22;
+  const nodes = useMemo(() => getNodeLayout(mode.topology, nodeCount), [modeId, tick]);
   const edges = useMemo(() => getEdges(mode.topology, nodes), [nodes]);
   const [pulses, setPulses] = useState([]);
   const pulseRef = useRef(0);
 
-  // Animate pulses along edges
+  // Pulse rate scales with noise for chaotic modes
+  const pulseInterval = mode.topology === 'chaotic'
+    ? Math.max(60, 300 - metrics.noiseHarassmentRisk * 2)
+    : 400;
+
   useEffect(() => {
     const interval = setInterval(() => {
       if (edges.length === 0) return;
-      const edge = edges[Math.floor(Math.random() * edges.length)];
-      const id = pulseRef.current++;
-      setPulses(p => [...p.slice(-12), { id, from: edge.from, to: edge.to, progress: 0 }]);
-    }, 400);
+      // Chaotic: fire multiple pulses at once
+      const burst = mode.topology === 'chaotic' ? 3 : 1;
+      for (let i = 0; i < burst; i++) {
+        const edge = edges[Math.floor(Math.random() * edges.length)];
+        const id = pulseRef.current++;
+        setPulses(p => [...p.slice(-30), { id, from: edge.from, to: edge.to, progress: 0 }]);
+      }
+    }, pulseInterval);
     return () => clearInterval(interval);
-  }, [edges]);
+  }, [edges, pulseInterval]);
 
   useEffect(() => {
     const anim = setInterval(() => {
@@ -142,7 +149,7 @@ export default function NetworkGraph({ modeId, metrics, tick }) {
         marginTop: '6px', fontSize: '10px', color: 'var(--text-dim)',
         letterSpacing: '0.5px',
       }}>
-        <span>NODES: {NODE_COUNT}</span>
+        <span>NODES: {nodeCount}</span>
         <span>EDGES: {edges.length}</span>
         <span>TOPOLOGY: {mode.topology.toUpperCase()}</span>
         <span style={{ color: 'var(--green)', marginLeft: 'auto' }}>
